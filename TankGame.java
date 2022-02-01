@@ -1,5 +1,3 @@
-import java.lang.Thread;
-import java.lang.InterruptedException;
 import javax.swing.*;
 
 public class TankGame {
