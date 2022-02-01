@@ -3,7 +3,7 @@ A level-based and achievement-based tank shooting game coded using swing and jav
 
 # Setup
 The only outside application needed is javafx. To install it, simply download the package
-from openjfx.io. 
+from [OpenJFX](openjfx.io). 
 
 # Running
 To run the game, run the command 
