@@ -278,7 +278,7 @@ public class DrawGame extends JPanel {
       }
    }
    
-   public void drawLevelSelect(Graphics g) {
+   public void drawLevelSelect(Graphics g) throws FontFormatException, IOException {
       //read star data from playerSave.txt
       try {
          File saveFile = new File("playerSave.txt");
@@ -331,6 +331,8 @@ public class DrawGame extends JPanel {
          }
          if (layout.length > 10 && windowSize < 1000) tileSize = tileSize * 5/4;
          g.setColor(Color.BLACK);
+         Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 14);
+         g.setFont(tankFont);
          g.drawString("Level " + currLevel, x, y - tileSize / 10);
          g.drawImage(accuracySymbol, x - tileSize * 1 / 10, y + tileSize * 21/20, tileSize * 1/5, tileSize * 1/5, null);
          g.drawImage(timerSymbol, x - tileSize * 1 / 10, y + tileSize * 25/20, tileSize * 1/5, tileSize * 1/5, null);
@@ -398,7 +400,7 @@ public class DrawGame extends JPanel {
       }
    }
    
-   private void drawLayout(Graphics g) {
+   private void drawLayout(Graphics g) throws FontFormatException {
       try {
          if (woodTile == null) { 
             woodTile = ImageIO.read(new File("woodTile.png"));
@@ -419,6 +421,8 @@ public class DrawGame extends JPanel {
          
          //Draw control instructions
          g.setColor(Color.BLACK);
+         Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 12);
+         g.setFont(tankFont);
          g.drawString("Controls", 75, 250);
          g.drawString("Movement -> WASD", 75, 270);
          g.drawString("Shoot -> Space", 75, 290);
@@ -594,7 +598,7 @@ public class DrawGame extends JPanel {
       }
    }
    
-   private void drawLevelSummary(Graphics g) {
+   private void drawLevelSummary(Graphics g) throws FontFormatException, IOException {
       if (nextLevelHovered) {
          g.drawImage(levelSummaryNextLevel, 0, 0, windowSize, windowSize, null);
       } else if (levelSelectHovered) {
@@ -603,6 +607,8 @@ public class DrawGame extends JPanel {
          g.drawImage(levelSummary, 0, 0, windowSize, windowSize, null);
       }
       if (accuracyStarsOn) {
+         Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 15);
+         g.setFont(tankFont);
          g.drawString("Enemy Tanks Killed: " + enemyCount, windowSize * 1/4, windowSize * 3/ 8);
          g.drawString("Missiles Fired: " + missilesFired, windowSize * 1/4, windowSize * 7/ 16);
          g.drawString("Accuracy: " + (int) (((double) enemyCount / (double) missilesFired) * 100) + "%", windowSize * 1/4, windowSize / 2);
@@ -1016,6 +1022,7 @@ public class DrawGame extends JPanel {
          levelTimeEnd = System.currentTimeMillis();
          drawExplosion = true;
          levelSummaryScreen = true;
+         missiles.clear();
          //Update star save data
          if (accuracyStarsOn) {
             if (currStar > accuracyStars[level-1]) {
@@ -1044,248 +1051,251 @@ public class DrawGame extends JPanel {
       
       
       frameCount++;
-      if (frameCount > 11) frameCount = 0;
-      if (fadeToWhite) {
-      
-         drawWhiteScreen(frameCount, g);
-         if (frameCount > 6) fadeToWhite = false;
-      
-      } else if (drawLevel1) {
-         drawLevel1(g);
-      } else if (drawLevel2) {
-         drawLevel2(g);
-      } else if (drawLevel3) {
-         drawLevel3(g);
-      } else if (drawExplosion) {
-         drawLayout(g);
-         player.draw(g);
-         drawTankExplosions(g);
-         drawExplosion(g);
-         if (frameCount > 10) {
-            drawExplosion = false;
-            //Update the level layout
-            if (gameOverScreen) {
-               frameCount = 0;
-            } else if (levelSelectActive) {
-               frameCount = 0;
-            } else if (levelSummaryScreen) {
-               frameCount = 0;
-            } else if (level == 1) {
-               frameCount = 0;
-               frameRepeat = 3;
-               drawLevel2 = true;
-               level = 2;
-               layout = GameConstants.level2Layout;
-               windowSize = 500;
-               frame.setSize(515, 530); 
-               playerLives = 3;
-               player.x = 100;
-               player.y = 100;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel2Enemies()) {
-                  enemies.add(enemy);
+      try {
+         if (frameCount > 11) frameCount = 0;
+         if (fadeToWhite) {
+         
+            drawWhiteScreen(frameCount, g);
+            if (frameCount > 6) fadeToWhite = false;
+         
+         } else if (drawLevel1) {
+            drawLevel1(g);
+         } else if (drawLevel2) {
+            drawLevel2(g);
+         } else if (drawLevel3) {
+            drawLevel3(g);
+         } else if (drawExplosion) {
+            drawLayout(g);
+            player.draw(g);
+            drawTankExplosions(g);
+            drawExplosion(g);
+            if (frameCount > 10) {
+               drawExplosion = false;
+               //Update the level layout
+               if (gameOverScreen) {
+                  frameCount = 0;
+               } else if (levelSelectActive) {
+                  frameCount = 0;
+               } else if (levelSummaryScreen) {
+                  frameCount = 0;
+               } else if (level == 1) {
+                  frameCount = 0;
+                  frameRepeat = 3;
+                  drawLevel2 = true;
+                  level = 2;
+                  layout = GameConstants.level2Layout;
+                  windowSize = 500;
+                  frame.setSize(515, 530); 
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 100;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel2Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 2) {
+                  frameCount = 0;
+                  frameRepeat = 3;
+                  drawLevel3 = true;
+                  layout = GameConstants.level3Layout;
+                  windowSize = 500;
+                  frame.setSize(515, 530); 
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 100;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel3Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 3) {
+                  layout = GameConstants.level4Layout;
+                  windowSize = 500;
+                  frame.setSize(515, 530); 
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 100;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel4Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 4) {
+                  layout = GameConstants.level5Layout;
+                  windowSize = 500;
+                  frame.setSize(515, 530); 
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 250;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel5Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 5) {
+                  layout = GameConstants.level6Layout;
+                  windowSize = 500;
+                  frame.setSize(515, 530); 
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 250;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel6Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 6) {
+                  layout = GameConstants.level7Layout;
+                  windowSize = 1000;
+                  frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 250;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel7Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 7) {
+                  layout = GameConstants.level8Layout;
+                  windowSize = 1000;
+                  frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 250;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel8Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 8) {
+                  layout = GameConstants.level9Layout;
+                  windowSize = 1000;
+                  frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 250;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel9Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 9) {
+                  layout = GameConstants.level10Layout;
+                  windowSize = 1000;
+                  frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
+                  playerLives = 3;
+                  player.x = 100;
+                  player.y = 250;
+                  enemies.clear();
+                  for (Tank enemy: GameConstants.getLevel10Enemies()) {
+                     enemies.add(enemy);
+                  }
+                  missiles.clear();
+                  missilesFired = 0;
+                  levelTimeStart = System.currentTimeMillis();
+                  currStar = 3;
+                  enemyCount = enemies.size();
+               } else if (level == 10) {
+                  levelSelectActive = true;
+                  gamePlayActive = false;
                }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 2) {
-               frameCount = 0;
-               frameRepeat = 3;
-               drawLevel3 = true;
-               layout = GameConstants.level3Layout;
-               windowSize = 500;
-               frame.setSize(515, 530); 
-               playerLives = 3;
-               player.x = 100;
-               player.y = 100;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel3Enemies()) {
-                  enemies.add(enemy);
+               timer.setDelay(tickLength);
+            }
+         } else if (levelSummaryScreen) {
+            drawLevelSummary(g);
+         } else if (mainMenuActive) {
+            if (menuSongPlayer.getStatus() != MediaPlayer.Status.PLAYING) {
+               menuSongPlayer.setCycleCount(1000000);
+               menuSongPlayer.play();
+            }
+            drawMainMenu(frameCount, g);
+            
+         } else if (levelSelectActive) {
+            drawLevelSelect(g);
+         } else if (optionsMenuActive) {
+            drawOptionsMenu(g);        
+         } else if (gamePlayActive) {
+            updatePlayer();
+            updateStars();
+            if (gameSongPlayer.getStatus() != MediaPlayer.Status.PLAYING && musicOn) {
+               gameSongPlayer.setCycleCount(1000000);
+               menuSongPlayer.stop();
+               gameSongPlayer.play();
+            }
+            g.setColor(Color.WHITE);
+            g.fillRect(0, 0, windowSize, windowSize);
+            
+            drawLayout(g);
+            updateTankBarrelImage(player, lastMouseX, lastMouseY, playerBarrelImages);
+            player.draw(g);
+            ArrayList<Missile> toRemove = new ArrayList<>();
+            //Draw enemy tanks
+            for (Tank enemy: enemies) {
+               updateTankBarrelImage(enemy, player.getX(), player.getY(), enemyBarrelImages);
+               enemy.draw(g);
+               activateEnemy(enemy);
+            }
+            
+            //Draw all missiles
+            for (Missile missile: missiles) {
+               missile.draw(g, player, missileSprite1, missileSprite2, missileSprite3, difficulty * missileSpeed);
+               if (missile.getX() > windowSize - 50 || missile.getX() < -50 || missile.getY() < -50 || missile.getY() > windowSize - 50) {
+                  toRemove.add(missile);
                }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 3) {
-               layout = GameConstants.level4Layout;
-               windowSize = 500;
-               frame.setSize(515, 530); 
-               playerLives = 3;
-               player.x = 100;
-               player.y = 100;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel4Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 4) {
-               layout = GameConstants.level5Layout;
-               windowSize = 500;
-               frame.setSize(515, 530); 
-               playerLives = 3;
-               player.x = 100;
-               player.y = 250;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel5Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 5) {
-               layout = GameConstants.level6Layout;
-               windowSize = 500;
-               frame.setSize(515, 530); 
-               playerLives = 3;
-               player.x = 100;
-               player.y = 250;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel6Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 6) {
-               layout = GameConstants.level7Layout;
-               windowSize = 1000;
-               frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-               playerLives = 3;
-               player.x = 100;
-               player.y = 250;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel7Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 7) {
-               layout = GameConstants.level8Layout;
-               windowSize = 1000;
-               frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-               playerLives = 3;
-               player.x = 100;
-               player.y = 250;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel8Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 8) {
-               layout = GameConstants.level9Layout;
-               windowSize = 1000;
-               frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-               playerLives = 3;
-               player.x = 100;
-               player.y = 250;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel9Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 9) {
-               layout = GameConstants.level10Layout;
-               windowSize = 1000;
-               frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
-               playerLives = 3;
-               player.x = 100;
-               player.y = 250;
-               enemies.clear();
-               for (Tank enemy: GameConstants.getLevel10Enemies()) {
-                  enemies.add(enemy);
-               }
-               missiles.clear();
-               missilesFired = 0;
-               levelTimeStart = System.currentTimeMillis();
-               currStar = 3;
-               enemyCount = enemies.size();
-            } else if (level == 10) {
+            }  
+            for (Missile missile: toRemove) {
+               missiles.remove(missile);
+            }
+            toRemove.clear();
+            
+            checkCollisions();
+            
+            drawTankExplosions(g);
+            
+         } else if (gameOverScreen) {
+            drawGameOver(g);
+            if (frameCount > 10) {
+               gameOverScreen = false;
                levelSelectActive = true;
-               gamePlayActive = false;
+               playerLives = 3;
             }
-            timer.setDelay(tickLength);
          }
-      } else if (levelSummaryScreen) {
-         drawLevelSummary(g);
-      } else if (mainMenuActive) {
-         if (menuSongPlayer.getStatus() != MediaPlayer.Status.PLAYING) {
-            menuSongPlayer.setCycleCount(1000000);
-            menuSongPlayer.play();
-         }
-         drawMainMenu(frameCount, g);
-         
-      } else if (levelSelectActive) {
-         drawLevelSelect(g);
-      } else if (optionsMenuActive) {
-         drawOptionsMenu(g);        
-      } else if (gamePlayActive) {
-         updatePlayer();
-         updateStars();
-         if (gameSongPlayer.getStatus() != MediaPlayer.Status.PLAYING && musicOn) {
-            gameSongPlayer.setCycleCount(1000000);
-            menuSongPlayer.stop();
-            gameSongPlayer.play();
-         }
-         g.setColor(Color.WHITE);
-         g.fillRect(0, 0, windowSize, windowSize);
-         
-         drawLayout(g);
-         updateTankBarrelImage(player, lastMouseX, lastMouseY, playerBarrelImages);
-         player.draw(g);
-         ArrayList<Missile> toRemove = new ArrayList<>();
-         //Draw enemy tanks
-         for (Tank enemy: enemies) {
-            updateTankBarrelImage(enemy, player.getX(), player.getY(), enemyBarrelImages);
-            enemy.draw(g);
-            activateEnemy(enemy);
-         }
-         
-         //Draw all missiles
-         for (Missile missile: missiles) {
-            missile.draw(g, player, missileSprite1, missileSprite2, missileSprite3, difficulty * missileSpeed);
-            if (missile.getX() > windowSize - 50 || missile.getX() < -50 || missile.getY() < -50 || missile.getY() > windowSize - 50) {
-               toRemove.add(missile);
-            }
-         }  
-         for (Missile missile: toRemove) {
-            missiles.remove(missile);
-         }
-         toRemove.clear();
-         
-         checkCollisions();
-         
-         drawTankExplosions(g);
-         
-      } else if (gameOverScreen) {
-         drawGameOver(g);
-         if (frameCount > 10) {
-            gameOverScreen = false;
-            levelSelectActive = true;
-            playerLives = 3;
-         }
-      }
+      } catch (FontFormatException e) { }
+      catch (IOException e) { }
    }
    
    

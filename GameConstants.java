@@ -123,20 +123,20 @@ public class GameConstants {
 
    public static int[][] level9Layout = new int[][]{new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                                              new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                                             new int[]{1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                                             new int[]{1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                                             new int[]{1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1},
-                                             new int[]{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-                                             new int[]{1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-                                             new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-                                             new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1},
+                                             new int[]{1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1},
+                                             new int[]{1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+                                             new int[]{1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1},
+                                             new int[]{1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                                             new int[]{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                                             new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
+                                             new int[]{1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1},
+                                             new int[]{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+                                             new int[]{1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+                                             new int[]{1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                                              new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                                             new int[]{1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1},
-                                             new int[]{1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-                                             new int[]{1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-                                             new int[]{1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1},
-                                             new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1},
                                              new int[]{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                                             new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1},
+                                             new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1},
                                              new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                                              new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                                              new int[]{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -281,18 +281,27 @@ public class GameConstants {
    
    public static ArrayList<Tank> getLevel9Enemies() {
       ArrayList<Tank> level3Enemies = new ArrayList<>();
-      Tank enemy1 = new Tank(true, 325, 325);
-      enemy1.travelling_ai = true;
+      Tank enemy1 = new Tank(true, 900, 125);
+      enemy1.rocket_ai = true;
       level3Enemies.add(enemy1);
-      Tank enemy2 = new Tank(true, 325, 475);
-      enemy2.travelling_ai = true;
+      Tank enemy2 = new Tank(true, 500, 325);
+      enemy2.rocket_ai = true;
       level3Enemies.add(enemy2);
-      Tank enemy3 = new Tank(true, 650, 325);
-      enemy3.rocket_ai = true;
+      Tank enemy3 = new Tank(true, 100, 425);
+      enemy3.tripleshot_ai = true;
       level3Enemies.add(enemy3);
-      Tank enemy4 = new Tank(true, 650, 650);
-      enemy4.homing_ai = true;
+      Tank enemy4 = new Tank(true, 100, 650);
+      enemy4.rocket_ai = true;
       level3Enemies.add(enemy4);
+      Tank enemy5 = new Tank(true, 500, 650);
+      enemy5.rocket_ai = true;
+      level3Enemies.add(enemy5);
+      Tank enemy6 = new Tank(true, 900, 650);
+      enemy6.homing_ai = true;
+      level3Enemies.add(enemy6);
+      Tank enemy7 = new Tank(true, 900, 725);
+      enemy7.homing_ai = true;
+      level3Enemies.add(enemy7);
       return level3Enemies;
    }
    
