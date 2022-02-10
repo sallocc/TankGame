@@ -52,6 +52,7 @@ public class DrawGame extends JPanel {
       optionsSoundOnMusicOnHard, optionsSoundOnMusicOffHard, optionsSoundOffMusicOnHard, optionsSoundOffMusicOffHard;
    private BufferedImage levelSelect;
    private BufferedImage levelSummary, levelSummaryNextLevel, levelSummaryLevelSelect;
+   private BufferedImage mudTile, holeTile;
    private boolean nextLevelHovered = false;
    private boolean levelSelectHovered = false;
    private int missileSpeed = 5;
@@ -216,6 +217,8 @@ public class DrawGame extends JPanel {
    public void drawMainMenu(int frameCount, Graphics g) {
       try {
          if (mainMenu1 == null) {
+            mudTile = ImageIO.read(new File("mud.png"));
+            holeTile = ImageIO.read(new File("hole.png"));
             levelSummary = ImageIO.read(new File("levelSummary.png"));
             levelSummaryNextLevel = ImageIO.read(new File("levelSummaryNextLevel.png"));
             levelSummaryLevelSelect = ImageIO.read(new File("levelSummaryLevelSelect.png"));
@@ -315,9 +318,16 @@ public class DrawGame extends JPanel {
          int miniTileSize = tileSize / layout.length;
          for (int row = 0; row < layout.length; row++) {
             for (int col = 0; col < layout.length; col++) {
-               if (layout[row][col] != 0) {
+               if (layout[row][col] == 1) {
+                  g.setColor(Color.BLACK);
                   g.fillRect(x + col * miniTileSize, y + row * miniTileSize, miniTileSize, miniTileSize);
-               }   
+               } else if (layout[row][col] == 2) {
+                  g.setColor(Color.ORANGE);
+                  g.fillRect(x + col * miniTileSize, y + row * miniTileSize, miniTileSize, miniTileSize);
+               } else if (layout[row][col] == 3) {
+                  g.setColor(Color.GRAY);
+                  g.fillRect(x + col * miniTileSize, y + row * miniTileSize, miniTileSize, miniTileSize);
+               }
             }
          }
          currLevel++;
@@ -411,7 +421,11 @@ public class DrawGame extends JPanel {
             for (int j = 0; j < layoutSize; j++) {
                if (layout[i][j] == 1) {
                   g.drawImage(woodTile, j * tileSize, i * tileSize, tileSize, tileSize, null);
-               }
+               } else if (layout[i][j] == 2) {
+                  g.drawImage(mudTile, j * tileSize, i * tileSize, tileSize, tileSize, null);
+               } else if (layout[i][j] == 3) {
+                  g.drawImage(holeTile, j * tileSize, i * tileSize, tileSize, tileSize, null);
+               } 
             }
          }
          for (int i = 0; i < playerLives; i++) {
@@ -433,7 +447,7 @@ public class DrawGame extends JPanel {
          long seconds = (System.currentTimeMillis() - levelTimeStart) / 1000 % 60;
          g.setColor(Color.WHITE);
          if (accuracyStarsOn) {
-            g.drawString("Missiles Fired: " + missilesFired, windowSize * 4/5, 35);  
+            g.drawString("Missiles Fired: " + missilesFired, windowSize * 3/5, 35);  
          } else {
             g.drawString("Time: " + String.format("%02d", minutes) + ":" + String.format("%02d", seconds), windowSize * 4/5, 35);
          }
@@ -846,51 +860,83 @@ public class DrawGame extends JPanel {
    
    private void updatePlayer() {
       int tileSize = windowSize / layout.length;
+      boolean stuckInMud = false;
+      if (layout[(int) (player.getY() / tileSize)][(int) (player.getX() / tileSize)] == 2) {
+         playerSpeed = playerSpeed / 2;
+         stuckInMud = true;
+      }
       if (down_pressed && right_pressed && layout[(int) ((player.getY() + 20) / tileSize)][(int) ((player.getX() + 20) / tileSize)] != 1 && 
          layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 1 &&
-         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 && 
+          layout[(int) ((player.getY() + 20) / tileSize)][(int) ((player.getX() + 20) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 3 &&
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.SOUTHEAST;
          player.y += (int) playerSpeed / Math.sqrt(2);
          player.x += (int) playerSpeed / Math.sqrt(2);
       } else if (down_pressed && left_pressed && layout[(int) ((player.getY() + 20) / tileSize)][(int) ((player.getX() - 20) / tileSize)] != 1 && 
          layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 1 &&
-         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1
+         && layout[(int) ((player.getY() + 20) / tileSize)][(int) ((player.getX() - 20) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 3 &&
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.SOUTHWEST;
          player.y += (int) playerSpeed / Math.sqrt(2);
          player.x -= (int) playerSpeed / Math.sqrt(2);
       } else if (down_pressed && layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 1 && 
          layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 &&
-         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1 &&
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3 &&
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.SOUTH;   
          player.y += playerSpeed;
       } else if (up_pressed && right_pressed && layout[(int) ((player.getY() - 20) / tileSize)][(int) ((player.getX() + 20) / tileSize)] != 1 && 
          layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 1 &&
-         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 &&
+         layout[(int) ((player.getY() - 20) / tileSize)][(int) ((player.getX() + 20) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 3 &&
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.NORTHEAST;
          player.y -= (int) playerSpeed / Math.sqrt(2);
          player.x += (int) playerSpeed / Math.sqrt(2);
       } else if (up_pressed && left_pressed && layout[(int) ((player.getY() - 20) / tileSize)][(int) ((player.getX() - 20) / tileSize)] != 1 && 
          layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 1 &&
-         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1 &&
+         layout[(int) ((player.getY() - 20) / tileSize)][(int) ((player.getX() - 20) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 3 &&
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.NORTHWEST;
          player.y -= (int) playerSpeed / Math.sqrt(2);
          player.x -= (int) playerSpeed / Math.sqrt(2);
       } else if (up_pressed && layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 1 && 
          layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1 &&
-         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 &&
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX()) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3 &&
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.NORTH;
          player.y -= playerSpeed;
       } else if (right_pressed && layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 && 
          layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 &&
-         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 1 &&
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3 &&
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() + 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.EAST; 
          player.x += playerSpeed;  
       } else if (left_pressed && layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1 && 
          layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1 &&
-         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1) {
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 1 &&
+         layout[(int) ((player.getY()) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3 && 
+         layout[(int) ((player.getY() + 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3 &&
+         layout[(int) ((player.getY() - 15) / tileSize)][(int) ((player.getX() - 15) / tileSize)] != 3) {
          player.direction = Tank.Cardinal.EAST;  
          player.x -= playerSpeed; 
       } 
+      if (stuckInMud) {
+         playerSpeed *= 2;
+      }
    }
    
    private void activateEnemy(Tank enemy) {
@@ -984,7 +1030,8 @@ public class DrawGame extends JPanel {
             BufferedImage enemySprite2rotate = enemySpritesRotated2[degreeIndex];
             BufferedImage enemySprite3rotate = enemySpritesRotated3[degreeIndex];
             enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
-            if (layout[(int) ((enemy.y + missileDY * 3) / (windowSize / layout.length))][(int) ((enemy.x + missileDX * 3) / (windowSize / layout.length))] == 0) {
+            if (layout[(int) ((enemy.y + missileDY * 3) / (windowSize / layout.length))][(int) ((enemy.x + missileDX * 3) / (windowSize / layout.length))] == 0 ||
+            layout[(int) ((enemy.y + missileDY * 3) / (windowSize / layout.length))][(int) ((enemy.x + missileDX * 3) / (windowSize / layout.length))] == 2) {
                enemy.x += missileDX / 4;
                enemy.y += missileDY / 4;
             }
