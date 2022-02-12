@@ -16,6 +16,7 @@ public class Tank {
    public boolean rocket_ai = false;
    public boolean tripleshot_ai = false;
    public boolean homing_ai = false;
+   public boolean pathfinding_ai = false;
    public int x, y;
    private BufferedImage sprite1, sprite2, sprite3;
    private BufferedImage sprite1_n, sprite1_w, sprite1_e, sprite1_ne, sprite1_nw, sprite1_se, sprite1_sw, sprite1_s;

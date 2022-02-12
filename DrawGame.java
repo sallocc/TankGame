@@ -25,7 +25,10 @@ public class DrawGame extends JPanel {
    private boolean levelSummaryScreen = false;
    private boolean mainMenuActive = true;
    private boolean levelSelectActive = false;
+   private boolean modeSelectActive = false;
+   private boolean endlessModeActive = false;
    private int levelHovered = 0;
+   private int levelModeHovered = 0;
    private boolean gamePlayActive = false;
    private boolean gameOverScreen = false;
    private boolean optionsMenuActive = false;
@@ -66,6 +69,7 @@ public class DrawGame extends JPanel {
    private int enemyCount = 0;
    private long levelTimeStart = 0;
    private long levelTimeEnd = 0;
+   private long lastEnemySpawnTime = 0;
    private int missilesFired = 0;
    
    private int level = 1;
@@ -279,6 +283,47 @@ public class DrawGame extends JPanel {
       } catch (IOException e) {
          System.out.println("Images not found.");
       }
+   }
+   
+   public void drawModeSelect(Graphics g) throws FontFormatException, IOException {
+      g.setColor(Color.BLACK);
+      Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 32);
+      g.setFont(tankFont);
+      g.drawString("Mode Select", windowSize * 1/4, windowSize * 1/4);
+      
+      tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 16);
+      g.setFont(tankFont);
+      
+      switch (levelModeHovered) {
+         case 0:
+            g.setColor(Color.BLACK);
+            g.drawString("Story Mode", windowSize * 3/8, windowSize * 9/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
+            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 13/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 3/4, windowSize * 1/3, windowSize * 1/8);
+      
+            break;
+         case 1:
+            g.setColor(Color.BLACK);
+            g.drawString("Story Mode", windowSize * 3/8, windowSize * 9/16);
+            g.setColor(Color.RED);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
+            g.setColor(Color.BLACK);
+            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 13/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 3/4, windowSize * 1/3, windowSize * 1/8);
+      
+            break;
+         default:
+            g.setColor(Color.BLACK);
+            g.drawString("story Mode", windowSize * 3/8, windowSize * 9/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
+            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 13/16);
+            g.setColor(Color.RED);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 3/4, windowSize * 1/3, windowSize * 1/8);
+      
+                        
+            
+      }      
    }
    
    public void drawLevelSelect(Graphics g) throws FontFormatException, IOException {
@@ -861,6 +906,9 @@ public class DrawGame extends JPanel {
    private void updatePlayer() {
       int tileSize = windowSize / layout.length;
       boolean stuckInMud = false;
+      if ((player.x < 50 && left_pressed) || (player.x > 950 && right_pressed) || (player.y < 50 && up_pressed) || (player.y > 800 && down_pressed)) {
+         return;
+      }
       if (layout[(int) (player.getY() / tileSize)][(int) (player.getX() / tileSize)] == 2) {
          playerSpeed = playerSpeed / 2;
          stuckInMud = true;
@@ -940,7 +988,7 @@ public class DrawGame extends JPanel {
    }
    
    private void activateEnemy(Tank enemy) {
-      if (enemy.canSee(player, layout, windowSize / layout[0].length)) {
+      if (enemy.x > 0 && enemy.x < 1000 && enemy.y > 0 && enemy.y < 1000 && enemy.canSee(player, layout, windowSize / layout[0].length)) {
          double missileDX, missileDY;
          int targetX = player.x, targetY = player.y;
          int shooterX = enemy.x, shooterY = enemy.y;
@@ -1035,8 +1083,327 @@ public class DrawGame extends JPanel {
                enemy.x += missileDX / 4;
                enemy.y += missileDY / 4;
             }
+         } 
+      } else if (enemy.pathfinding_ai) {
+         double missileDX, missileDY;
+         int targetX = player.x, targetY = player.y;
+         int shooterX = enemy.x, shooterY = enemy.y;
+         double relX = targetX - shooterX, relY = targetY - shooterY;
+         double angle = Math.atan(relY / relX);
+         if (relX < 0) {
+            angle += Math.PI;
+         }
+         double missileX = enemy.x + enemy.getSize() / 2 * Math.cos(angle);
+         double missileY = enemy.y + enemy.getSize() / 2 * Math.sin(angle);
+         missileDX = difficulty * missileSpeed * Math.cos(angle);
+         missileDY = difficulty * missileSpeed * Math.sin(angle);
+
+         int rotationRequired = (int) Math.toDegrees(angle + 4*Math.PI);
+         int degreeIndex =  rotationRequired % 360;
+         if (degreeIndex == -1) { degreeIndex = 270; }
+         BufferedImage enemySprite1rotate = enemySpritesRotated1[degreeIndex];
+         BufferedImage enemySprite2rotate = enemySpritesRotated2[degreeIndex];
+         BufferedImage enemySprite3rotate = enemySpritesRotated3[degreeIndex];
+         enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+         //Check if you can go straight to player
+         double tileSize = windowSize / layout.length;
+         int[] directionChecks = new int[4];
+         boolean moved = false;
+         if ((enemy.x < 0 || enemy.x > 1000 || enemy.y < 0 || enemy.y > 1000) || 
+         (layout[(int) ((enemy.y + missileDY / difficulty * 5) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 5) / (windowSize / layout.length))] == 0 ||
+         layout[(int) ((enemy.y + missileDY / difficulty * 5) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 5) / (windowSize / layout.length))] == 2)) {
+            enemy.x += missileDX / 4;
+            enemy.y += missileDY / 4;
+            moved = true;
+         } else {
+            int pathDX = 0, pathDY = 0;
+            int pathTargetX = (int) (player.x / tileSize), pathTargetY = (int) (player.y / tileSize);
+            int sourceX = (int) ((enemy.x + missileDX / difficulty * 5) / (windowSize / layout.length));
+            int sourceY = (int) ((enemy.y + missileDY / difficulty * 5) / (windowSize / layout.length));
+            if (sourceX < 0) {
+               sourceX = 0;
+            } 
+            if (sourceX >= layout.length) {
+               sourceX = layout.length - 1;
+            }
+            if (sourceY < 0) {
+               sourceY = 0;
+            }
+            if (sourceY >= layout.length) {
+               sourceY = layout.length - 1;
+            }
+            int enemyTileX = (int) ((enemy.x) / (windowSize / layout.length)), 
+               enemyTileY = (int) ((enemy.y) / (windowSize / layout.length));
+            if (sourceX != enemyTileX) {
+               pathDY = (int) Math.signum(missileDY);
+            } else {
+               pathDX = (int) Math.signum(missileDX);
+            }
+
+            directionChecks = pathFind(pathTargetX, pathTargetY, sourceX, sourceY, pathDX, pathDY);
+            /*if ((degreeIndex > 0 && degreeIndex < 45)) {
+               directionChecks[0] = 1;
+               directionChecks[1] = 2;
+               directionChecks[2] = 3;
+               directionChecks[3] = 4;
+            } else if ((degreeIndex > 44 && degreeIndex < 90)) {
+               directionChecks[0] = 4;
+               directionChecks[1] = 3;
+               directionChecks[2] = 1;
+               directionChecks[3] = 2;
+            } else if ((degreeIndex > 89 && degreeIndex < 135)) {
+               directionChecks[0] = 3;
+               directionChecks[1] = 4;
+               directionChecks[2] = 1;
+               directionChecks[3] = 2;
+            } else if ((degreeIndex > 134 && degreeIndex < 180)) {
+               directionChecks[0] = 1;
+               directionChecks[1] = 2;
+               directionChecks[2] = 4;
+               directionChecks[3] = 3;
+            } else if ((degreeIndex > 179 && degreeIndex < 225)) {
+               directionChecks[0] = 2;
+               directionChecks[1] = 1;
+               directionChecks[2] = 4;
+               directionChecks[3] = 3;
+            } else if ((degreeIndex > 224 && degreeIndex < 270)) {
+               directionChecks[0] = 3;
+               directionChecks[1] = 4;
+               directionChecks[2] = 1;
+               directionChecks[3] = 2;
+            } else if ((degreeIndex > 269 && degreeIndex < 315)) {
+               directionChecks[0] = 4;
+               directionChecks[1] = 3;
+               directionChecks[2] = 1;
+               directionChecks[3] = 2;
+            } else if ((degreeIndex > 314 && degreeIndex < 360)) {
+               directionChecks[0] = 2;
+               directionChecks[1] = 1;
+               directionChecks[2] = 3;
+               directionChecks[3] = 4;
+            } */
+         }
+         for (int i = 0; i < 4; i++) {
+            if (!moved) {
+               switch (directionChecks[i]) {
+                  case 1:
+                     //Go up
+                     if (enemy.y > 1000 || ((layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 2))) {
+                        enemySprite1rotate = enemySpritesRotated1[270];
+                        enemySprite2rotate = enemySpritesRotated2[270];
+                        enemySprite3rotate = enemySpritesRotated3[270];
+                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+                        enemy.y -= missileSpeed;
+                        moved = true;
+                     }
+                     break;
+                  case 2:
+                     //Go down
+                     if (enemy.y < 0 || ((layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 2))) {
+                        enemySprite1rotate = enemySpritesRotated1[90];
+                        enemySprite2rotate = enemySpritesRotated2[90];
+                        enemySprite3rotate = enemySpritesRotated3[90];
+                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+                        enemy.y += missileSpeed;
+                        moved = true;
+                     }
+                     break;
+                  case 3:
+                     //Go right
+                     if (enemy.x < 0 || ((layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 2))) {
+                        enemySprite1rotate = enemySpritesRotated1[0];
+                        enemySprite2rotate = enemySpritesRotated2[0];
+                        enemySprite3rotate = enemySpritesRotated3[0];
+                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+                        enemy.x += missileSpeed;
+                        moved = true;
+                     }
+                     break;
+                  case 4:
+                     //Go left
+                     if (enemy.x > 1000 || ((layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2)) && 
+                     ((layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2))) {
+                        enemySprite1rotate = enemySpritesRotated1[180];
+                        enemySprite2rotate = enemySpritesRotated2[180];
+                        enemySprite3rotate = enemySpritesRotated3[180];
+                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+                        enemy.x -= missileSpeed;
+                        moved = true;
+                     }
+                     break;
+                  default:
+                     //Go left
+                     if (enemy.x > 1000 || (layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
+                     layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2)) {
+                        enemySprite1rotate = enemySpritesRotated1[180];
+                        enemySprite2rotate = enemySpritesRotated2[180];
+                        enemySprite3rotate = enemySpritesRotated3[180];
+                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+                        enemy.x -= missileSpeed;
+                        moved = true;
+                     }
+               }     
+            }
          }
       }
+   }
+   
+   private int[] pathFind(int playerX, int playerY, int wallX, int wallY, int dx, int dy) {
+      boolean foundGap = false;
+      int tempX = wallX;
+      int tempY = wallY;
+      while (!(layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2) && !(tempX == playerX || tempY == playerY)) {
+         tempX += dx;
+         tempY += dy;
+      }
+      if (layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2) {
+         if (dx > 0) {
+            if (playerY > wallY) {
+               return new int[]{3, 4, 1, 2};
+            } else {
+               return new int[]{3, 4, 2, 1};
+            }
+         } else if (dx < 0) {
+            if (playerY > wallY) {
+               return new int[]{4, 3, 1, 2};
+            } else {
+               return new int[]{4, 3, 2, 1};
+            }
+         } else if (dy > 0) {
+            if (playerX > wallX) {
+               return new int[]{2, 1, 3, 4};
+            } else {
+               return new int[]{2, 1, 4, 3};
+            }
+         } else {
+            if (playerX > wallX) {
+               return new int[]{1, 2, 3, 4};
+            } else {
+               return new int[]{1, 2, 4, 3};
+            }
+         }
+      }
+      tempX += dx;
+      tempY += dy;
+      
+      int backX = wallX - dx;
+      int backY = wallY - dy;
+      if (!foundGap) {
+         while (((tempX >= 0 && tempX < layout.length && tempY >= 0 && tempY < layout.length) &&
+               !(layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2)) &&
+               ((backX >= 0 && backX < layout.length && backY >= 0 && backY < layout.length) &&
+                !(layout[backY][backX] == 0 || layout[backY][backX] == 2)))  {
+               tempX += dx;
+               tempY += dy;
+               backX -= dx;
+               backY -= dy;
+         }
+         if (backX >= 0 && backX < layout.length && backY >= 0 && backY < layout.length) {
+            if (layout[backY][backX] == 0 || layout[backY][backX] == 2) {
+               if (dx > 0) {
+                  if (playerY > wallY) {
+                     return new int[]{4, 3, 1, 2};
+                  } else {
+                     return new int[]{4, 3, 2, 1};
+                  }
+               } else if (dx < 0) {
+                  if (playerY > wallY) {
+                     return new int[]{3, 4, 1, 2};
+                  } else {
+                     return new int[]{3, 4, 2, 1};
+                  }
+               } else if (dy > 0) {
+                  if (playerX > wallX) {
+                     return new int[]{1, 2, 3, 4};
+                  } else {
+                     return new int[]{1, 2, 4, 3};
+                  }
+               } else {
+                  if (playerX > wallX) {
+                     return new int[]{2, 1, 3, 4};
+                  } else {
+                     return new int[]{2, 1, 4, 3};
+                  }
+               }
+            }
+         } else if (tempX >= 0 && tempX < layout.length && tempY >= 0 && tempY < layout.length) {
+            if (layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2) {
+               if (dx > 0) {
+                  if (playerY > wallY) {
+                     return new int[]{3, 4, 1, 2};
+                  } else {
+                     return new int[]{3, 4, 2, 1};
+                  }
+               } else if (dx < 0) {
+                  if (playerY > wallY) {
+                     return new int[]{4, 3, 1, 2};
+                  } else {
+                     return new int[]{4, 3, 2, 1};
+                  }
+               } else if (dy > 0) {
+                  if (playerX > wallX) {
+                     return new int[]{2, 1, 3, 4};
+                  } else {
+                     return new int[]{2, 1, 4, 3};
+                  }
+               } else {
+                  if (playerX > wallX) {
+                     return new int[]{1, 2, 3, 4};
+                  } else {
+                     return new int[]{1, 2, 4, 3};
+                  }
+               }
+            }
+         } else {
+            return new int[]{1, 2, 3, 4};
+         }
+      } else {
+         if (dx > 0) {
+            if (playerY > wallY) {
+               return new int[]{3, 4, 1, 2};
+            } else {
+               return new int[]{3, 4, 2, 1};
+            }
+         } else if (dx < 0) {
+            if (playerY > wallY) {
+               return new int[]{4, 3, 1, 2};
+            } else {
+               return new int[]{4, 3, 2, 1};
+            }
+         } else if (dy > 0) {
+            if (playerX > wallX) {
+               return new int[]{1, 2, 3, 4};
+            } else {
+               return new int[]{1, 2, 4, 3};
+            }
+         } else {
+            if (playerX > wallX) {
+               return new int[]{2, 1, 3, 4};
+            } else {
+               return new int[]{2, 1, 4, 3};
+            }
+         }
+      }
+      return new int[]{1, 2, 3, 4};
    }
    
    private void updateStars() {
@@ -1059,12 +1426,37 @@ public class DrawGame extends JPanel {
       }
    }
    
+   private void spawnEnemy() {
+      Random rand = new Random();
+      int randSpawnX = rand.nextInt(1150) - 50;
+      int randSpawnY = rand.nextInt(1150) - 50;
+      int randSwitch = rand.nextInt(2);
+      int spawnX, spawnY;
+      if (randSpawnX < 1000 && randSpawnX > 0) {
+         spawnX = randSpawnX;
+         if (randSpawnY > 0 && randSpawnY < 1000) {
+            if (randSwitch == 0) {
+               randSpawnY = -25;
+            } else {
+               randSpawnY = 1050;
+            }
+         } 
+         spawnY = randSpawnY;
+      } else {
+         spawnY = randSpawnY;
+         spawnX = randSpawnX;
+      }
+      Tank enemy = new Tank(true, spawnX, spawnY);
+      enemy.pathfinding_ai = true;
+      enemies.add(enemy);
+   }
+   
    @Override
    protected void paintComponent(Graphics g) {
       super.paintComponent(g);
       
       //Check if all enemies are dead naturally
-      if (enemies.isEmpty() && !drawExplosion && !gameOverScreen && !levelSelectActive && !levelSummaryScreen) {
+      if (enemies.isEmpty() && !modeSelectActive && !drawExplosion && !gameOverScreen && !levelSelectActive && !levelSummaryScreen) {
          frameCount = 0;
          levelTimeEnd = System.currentTimeMillis();
          drawExplosion = true;
@@ -1121,7 +1513,9 @@ public class DrawGame extends JPanel {
                //Update the level layout
                if (gameOverScreen) {
                   frameCount = 0;
-               } else if (levelSelectActive) {
+               } else if (modeSelectActive) {
+                  frameCount = 0;
+               }else if (levelSelectActive) {
                   frameCount = 0;
                } else if (levelSummaryScreen) {
                   frameCount = 0;
@@ -1282,6 +1676,8 @@ public class DrawGame extends JPanel {
                }
                timer.setDelay(tickLength);
             }
+         } else if (modeSelectActive) {
+            drawModeSelect(g);
          } else if (levelSummaryScreen) {
             drawLevelSummary(g);
          } else if (mainMenuActive) {
@@ -1297,7 +1693,13 @@ public class DrawGame extends JPanel {
             drawOptionsMenu(g);        
          } else if (gamePlayActive) {
             updatePlayer();
-            updateStars();
+            if (endlessModeActive && 5 - 4/5.0 * Math.min((System.currentTimeMillis() - levelTimeStart) / 1000 / 60, 5.0) < 
+                                    (System.currentTimeMillis() - lastEnemySpawnTime) / 1000) {
+               spawnEnemy();
+               lastEnemySpawnTime = System.currentTimeMillis();
+            } else {
+               updateStars();
+            }
             if (gameSongPlayer.getStatus() != MediaPlayer.Status.PLAYING && musicOn) {
                gameSongPlayer.setCycleCount(1000000);
                menuSongPlayer.stop();
@@ -1362,6 +1764,14 @@ public class DrawGame extends JPanel {
                mainMenu2 = mainMenu2Normal;
                mainMenu3 = mainMenu3Normal;
             }
+         } else if (modeSelectActive) {
+            if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize / 2 + 30 && e.getY() < windowSize * 5/8 + 30) {
+               levelModeHovered = 1;
+            } else if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize * 3/4 + 30 && e.getY() < windowSize * 7/8 + 30) {
+               levelModeHovered = 2;
+            } else {
+               levelModeHovered = 0;
+            }
          } else if (levelSummaryScreen) {
             if (e.getX() > windowSize * 3/4 && e.getX() < windowSize * 17/20 && e.getY() > windowSize * 7/10 + 30 && e.getY() < windowSize * 4/5 + 30) {
                nextLevelHovered = true;  
@@ -1423,8 +1833,37 @@ public class DrawGame extends JPanel {
          if (e.getX() > 355 && e.getX() < 465 && e.getY() > 250 && e.getY() < 325 && mainMenuActive) {
             fadeToWhite = true;
             mainMenuActive = false;
-            levelSelectActive = true;
+            modeSelectActive = true;
             frameCount = 0;
+         }
+         if (modeSelectActive) {
+            if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize / 2 + 30 && e.getY() < windowSize * 5/8 + 30) {
+               levelSelectActive = true;
+               modeSelectActive = false;
+            } else if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize * 3/4 + 30&& e.getY() < windowSize * 7/8 + 30) {
+               endlessModeActive = true;
+               gamePlayActive = true;
+               modeSelectActive = false;
+               frameCount = 0;
+               frameRepeat = 3;
+               level = 10;
+               layout = GameConstants.levelEndlessLayout;
+               windowSize = 1000;
+               frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight()); 
+               playerLives = 3;
+               player.x = 500;
+               player.y = 500;
+               enemies.clear();
+               missiles.clear();
+               missilesFired = 0;
+               levelTimeStart = System.currentTimeMillis();
+               currStar = 3;
+               spawnEnemy();
+               spawnEnemy();
+               spawnEnemy();
+               spawnEnemy();
+               enemyCount = enemies.size();
+            }
          }
          if (levelSelectActive) {
             //Change level star preference
