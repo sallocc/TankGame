@@ -491,7 +491,10 @@ public class DrawGame extends JPanel {
          long minutes = (System.currentTimeMillis() - levelTimeStart) / 1000 / 60;
          long seconds = (System.currentTimeMillis() - levelTimeStart) / 1000 % 60;
          g.setColor(Color.WHITE);
-         if (accuracyStarsOn) {
+         if (endlessModeActive) {
+            g.setColor(Color.BLACK);
+            g.drawString("Enemies Killed: " + enemyCount, windowSize * 3/5, 35);
+         } else if (accuracyStarsOn) {
             g.drawString("Missiles Fired: " + missilesFired, windowSize * 3/5, 35);  
          } else {
             g.drawString("Time: " + String.format("%02d", minutes) + ":" + String.format("%02d", seconds), windowSize * 4/5, 35);
@@ -775,6 +778,10 @@ public class DrawGame extends JPanel {
       
       //Check for missile collisions with walls
       for (Missile missile: missiles) {
+         if (missile.getX() < 0 || missile.getX() > 1000 || missile.getY() < 0 || missile.getY() > 1000) {
+            toRemove.add(missile);
+            continue;
+         }
          int layoutSize = layout.length;
          int tileSize = windowSize / layoutSize;
          int tileX = ((int) (missile.getX() + missile.getDX())) / tileSize, tileY = ((int) (missile.getY() + missile.getDY())) / tileSize;
@@ -857,6 +864,9 @@ public class DrawGame extends JPanel {
                   if (soundOn) {
                      enemy.playExplosion();
                   }
+                  if (endlessModeActive) {
+                     enemyCount++;
+                  }
                }
             }
          }   
@@ -872,6 +882,10 @@ public class DrawGame extends JPanel {
                if (level >= 1 && level <= 5) {
                   player.x = 100;
                   player.y = 100;
+               } else if (endlessModeActive) {
+                  enemies.clear();
+                  player.x = 500;
+                  player.y = 500;
                } else {
                   player.x = 100;
                   player.y = 250;
@@ -906,7 +920,7 @@ public class DrawGame extends JPanel {
    private void updatePlayer() {
       int tileSize = windowSize / layout.length;
       boolean stuckInMud = false;
-      if ((player.x < 50 && left_pressed) || (player.x > 950 && right_pressed) || (player.y < 50 && up_pressed) || (player.y > 800 && down_pressed)) {
+      if ((player.x < 20 && left_pressed) || (player.x > 980 && right_pressed) || (player.y < 20 && up_pressed) || (player.y > 800 && down_pressed)) {
          return;
       }
       if (layout[(int) (player.getY() / tileSize)][(int) (player.getX() / tileSize)] == 2) {
@@ -1085,6 +1099,7 @@ public class DrawGame extends JPanel {
             }
          } 
       } else if (enemy.pathfinding_ai) {
+         //Establish angle to player and missile trajectory
          double missileDX, missileDY;
          int targetX = player.x, targetY = player.y;
          int shooterX = enemy.x, shooterY = enemy.y;
@@ -1098,6 +1113,7 @@ public class DrawGame extends JPanel {
          missileDX = difficulty * missileSpeed * Math.cos(angle);
          missileDY = difficulty * missileSpeed * Math.sin(angle);
 
+         //Create rotated images for ank
          int rotationRequired = (int) Math.toDegrees(angle + 4*Math.PI);
          int degreeIndex =  rotationRequired % 360;
          if (degreeIndex == -1) { degreeIndex = 270; }
@@ -1110,16 +1126,17 @@ public class DrawGame extends JPanel {
          int[] directionChecks = new int[4];
          boolean moved = false;
          if ((enemy.x < 0 || enemy.x > 1000 || enemy.y < 0 || enemy.y > 1000) || 
-         (layout[(int) ((enemy.y + missileDY / difficulty * 5) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 5) / (windowSize / layout.length))] == 0 ||
-         layout[(int) ((enemy.y + missileDY / difficulty * 5) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 5) / (windowSize / layout.length))] == 2)) {
-            enemy.x += missileDX / 4;
-            enemy.y += missileDY / 4;
+         (layout[(int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length))] == 0 ||
+         layout[(int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length))] == 2)) {
+            enemy.x += missileDX / difficulty;
+            enemy.y += missileDY / difficulty;
             moved = true;
          } else {
             int pathDX = 0, pathDY = 0;
             int pathTargetX = (int) (player.x / tileSize), pathTargetY = (int) (player.y / tileSize);
-            int sourceX = (int) ((enemy.x + missileDX / difficulty * 5) / (windowSize / layout.length));
-            int sourceY = (int) ((enemy.y + missileDY / difficulty * 5) / (windowSize / layout.length));
+            int sourceX = (int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length));
+            int sourceY = (int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length));
+            //Correct for out of bounds
             if (sourceX < 0) {
                sourceX = 0;
             } 
@@ -1134,54 +1151,14 @@ public class DrawGame extends JPanel {
             }
             int enemyTileX = (int) ((enemy.x) / (windowSize / layout.length)), 
                enemyTileY = (int) ((enemy.y) / (windowSize / layout.length));
-            if (sourceX != enemyTileX) {
+            int wallCenterX = (int) ((2 * sourceX + 1) * tileSize / 2);
+            int wallCenterY = (int) ((2 * sourceY + 1) * tileSize / 2);
+            if (Math.abs(shooterX - wallCenterX) > 35 && Math.abs(missileDX) > Math.abs(missileDY)) {
                pathDY = (int) Math.signum(missileDY);
             } else {
                pathDX = (int) Math.signum(missileDX);
             }
-
             directionChecks = pathFind(pathTargetX, pathTargetY, sourceX, sourceY, pathDX, pathDY);
-            /*if ((degreeIndex > 0 && degreeIndex < 45)) {
-               directionChecks[0] = 1;
-               directionChecks[1] = 2;
-               directionChecks[2] = 3;
-               directionChecks[3] = 4;
-            } else if ((degreeIndex > 44 && degreeIndex < 90)) {
-               directionChecks[0] = 4;
-               directionChecks[1] = 3;
-               directionChecks[2] = 1;
-               directionChecks[3] = 2;
-            } else if ((degreeIndex > 89 && degreeIndex < 135)) {
-               directionChecks[0] = 3;
-               directionChecks[1] = 4;
-               directionChecks[2] = 1;
-               directionChecks[3] = 2;
-            } else if ((degreeIndex > 134 && degreeIndex < 180)) {
-               directionChecks[0] = 1;
-               directionChecks[1] = 2;
-               directionChecks[2] = 4;
-               directionChecks[3] = 3;
-            } else if ((degreeIndex > 179 && degreeIndex < 225)) {
-               directionChecks[0] = 2;
-               directionChecks[1] = 1;
-               directionChecks[2] = 4;
-               directionChecks[3] = 3;
-            } else if ((degreeIndex > 224 && degreeIndex < 270)) {
-               directionChecks[0] = 3;
-               directionChecks[1] = 4;
-               directionChecks[2] = 1;
-               directionChecks[3] = 2;
-            } else if ((degreeIndex > 269 && degreeIndex < 315)) {
-               directionChecks[0] = 4;
-               directionChecks[1] = 3;
-               directionChecks[2] = 1;
-               directionChecks[3] = 2;
-            } else if ((degreeIndex > 314 && degreeIndex < 360)) {
-               directionChecks[0] = 2;
-               directionChecks[1] = 1;
-               directionChecks[2] = 3;
-               directionChecks[3] = 4;
-            } */
          }
          for (int i = 0; i < 4; i++) {
             if (!moved) {
@@ -1268,6 +1245,10 @@ public class DrawGame extends JPanel {
    }
    
    private int[] pathFind(int playerX, int playerY, int wallX, int wallY, int dx, int dy) {
+      if (dy == 0) {
+         dy++;
+         dy--;
+      }
       boolean foundGap = false;
       int tempX = wallX;
       int tempY = wallY;
@@ -1307,103 +1288,74 @@ public class DrawGame extends JPanel {
       
       int backX = wallX - dx;
       int backY = wallY - dy;
-      if (!foundGap) {
-         while (((tempX >= 0 && tempX < layout.length && tempY >= 0 && tempY < layout.length) &&
-               !(layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2)) &&
-               ((backX >= 0 && backX < layout.length && backY >= 0 && backY < layout.length) &&
-                !(layout[backY][backX] == 0 || layout[backY][backX] == 2)))  {
-               tempX += dx;
-               tempY += dy;
-               backX -= dx;
-               backY -= dy;
-         }
-         if (backX >= 0 && backX < layout.length && backY >= 0 && backY < layout.length) {
-            if (layout[backY][backX] == 0 || layout[backY][backX] == 2) {
-               if (dx > 0) {
-                  if (playerY > wallY) {
-                     return new int[]{4, 3, 1, 2};
-                  } else {
-                     return new int[]{4, 3, 2, 1};
-                  }
-               } else if (dx < 0) {
-                  if (playerY > wallY) {
-                     return new int[]{3, 4, 1, 2};
-                  } else {
-                     return new int[]{3, 4, 2, 1};
-                  }
-               } else if (dy > 0) {
-                  if (playerX > wallX) {
-                     return new int[]{1, 2, 3, 4};
-                  } else {
-                     return new int[]{1, 2, 4, 3};
-                  }
-               } else {
-                  if (playerX > wallX) {
-                     return new int[]{2, 1, 3, 4};
-                  } else {
-                     return new int[]{2, 1, 4, 3};
-                  }
-               }
-            }
-         } else if (tempX >= 0 && tempX < layout.length && tempY >= 0 && tempY < layout.length) {
-            if (layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2) {
-               if (dx > 0) {
-                  if (playerY > wallY) {
-                     return new int[]{3, 4, 1, 2};
-                  } else {
-                     return new int[]{3, 4, 2, 1};
-                  }
-               } else if (dx < 0) {
-                  if (playerY > wallY) {
-                     return new int[]{4, 3, 1, 2};
-                  } else {
-                     return new int[]{4, 3, 2, 1};
-                  }
-               } else if (dy > 0) {
-                  if (playerX > wallX) {
-                     return new int[]{2, 1, 3, 4};
-                  } else {
-                     return new int[]{2, 1, 4, 3};
-                  }
-               } else {
-                  if (playerX > wallX) {
-                     return new int[]{1, 2, 3, 4};
-                  } else {
-                     return new int[]{1, 2, 4, 3};
-                  }
-               }
-            }
-         } else {
-            return new int[]{1, 2, 3, 4};
-         }
-      } else {
-         if (dx > 0) {
-            if (playerY > wallY) {
-               return new int[]{3, 4, 1, 2};
-            } else {
-               return new int[]{3, 4, 2, 1};
-            }
-         } else if (dx < 0) {
-            if (playerY > wallY) {
-               return new int[]{4, 3, 1, 2};
-            } else {
-               return new int[]{4, 3, 2, 1};
-            }
-         } else if (dy > 0) {
-            if (playerX > wallX) {
-               return new int[]{1, 2, 3, 4};
-            } else {
-               return new int[]{1, 2, 4, 3};
-            }
-         } else {
-            if (playerX > wallX) {
-               return new int[]{2, 1, 3, 4};
-            } else {
-               return new int[]{2, 1, 4, 3};
-            }
-         }
+      while (((tempX >= 0 && tempX < layout.length && tempY >= 0 && tempY < layout.length) &&
+            !(layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2)) &&
+            ((backX >= 0 && backX < layout.length && backY >= 0 && backY < layout.length) &&
+             !(layout[backY][backX] == 0 || layout[backY][backX] == 2)))  {
+            tempX += dx;
+            tempY += dy;
+            backX -= dx;
+            backY -= dy;
       }
-      return new int[]{1, 2, 3, 4};
+      if (backX >= 0 && backX < layout.length && backY >= 0 && backY < layout.length) {
+         if (layout[backY][backX] == 0 || layout[backY][backX] == 2) {
+            if (dx > 0) {
+               if (playerY > wallY) {
+                  return new int[]{4, 3, 2, 1};
+               } else {
+                  return new int[]{4, 3, 1, 2};
+               }
+            } else if (dx < 0) {
+               if (playerY > wallY) {
+                  return new int[]{3, 4, 2, 1};
+               } else {
+                  return new int[]{3, 4, 1, 2};
+               }
+            } else if (dy > 0) {
+               if (playerX > wallX) {
+                  return new int[]{1, 2, 3, 4};
+               } else {
+                  return new int[]{1, 2, 4, 3};
+               }
+            } else {
+               if (playerX > wallX) {
+                  return new int[]{2, 1, 3, 4};
+               } else {
+                  return new int[]{2, 1, 4, 3};
+               }
+            }
+         }
+      } 
+      if (tempX >= 0 && tempX < layout.length && tempY >= 0 && tempY < layout.length) {
+         if (layout[tempY][tempX] == 0 || layout[tempY][tempX] == 2) {
+            if (dx > 0) {
+               if (playerY > wallY) {
+                  return new int[]{3, 4, 2, 1};
+               } else {
+                  return new int[]{3, 4, 1, 2};
+               }
+            } else if (dx < 0) {
+               if (playerY > wallY) {
+                  return new int[]{4, 3, 2, 1};
+               } else {
+                  return new int[]{4, 3, 1, 2};
+               }
+            } else if (dy > 0) {
+               if (playerX > wallX) {
+                  return new int[]{2, 1, 3, 4};
+               } else {
+                  return new int[]{2, 1, 4, 3};
+               }
+            } else {
+               if (playerX > wallX) {
+                  return new int[]{1, 2, 3, 4};
+               } else {
+                  return new int[]{1, 2, 4, 3};
+               }
+            }
+         }
+      } 
+      return new int[]{1, 2, 3, 4}; 
    }
    
    private void updateStars() {
@@ -1862,7 +1814,7 @@ public class DrawGame extends JPanel {
                spawnEnemy();
                spawnEnemy();
                spawnEnemy();
-               enemyCount = enemies.size();
+               enemyCount = 0;
             }
          }
          if (levelSelectActive) {
