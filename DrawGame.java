@@ -289,7 +289,7 @@ public class DrawGame extends JPanel {
       g.setColor(Color.BLACK);
       Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 32);
       g.setFont(tankFont);
-      g.drawString("Mode Select", windowSize * 1/4, windowSize * 1/4);
+      g.drawString("Mode Select", windowSize * 1/4, windowSize * 3/16);
       
       tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 16);
       g.setFont(tankFont);
@@ -297,29 +297,29 @@ public class DrawGame extends JPanel {
       switch (levelModeHovered) {
          case 0:
             g.setColor(Color.BLACK);
-            g.drawString("Story Mode", windowSize * 3/8, windowSize * 9/16);
+            g.drawString("Story Mode", windowSize * 3/8, windowSize * 5/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/4, windowSize * 1/3, windowSize * 1/8);
+            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 9/16);
             g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
-            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 13/16);
-            g.drawRect(windowSize * 3/8 - 20, windowSize * 3/4, windowSize * 1/3, windowSize * 1/8);
       
             break;
          case 1:
             g.setColor(Color.BLACK);
-            g.drawString("Story Mode", windowSize * 3/8, windowSize * 9/16);
+            g.drawString("Story Mode", windowSize * 3/8, windowSize * 5/16);
             g.setColor(Color.RED);
-            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/4, windowSize * 1/3, windowSize * 1/8);
             g.setColor(Color.BLACK);
-            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 13/16);
-            g.drawRect(windowSize * 3/8 - 20, windowSize * 3/4, windowSize * 1/3, windowSize * 1/8);
+            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 9/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
       
             break;
          default:
             g.setColor(Color.BLACK);
-            g.drawString("story Mode", windowSize * 3/8, windowSize * 9/16);
-            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
-            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 13/16);
+            g.drawString("story Mode", windowSize * 3/8, windowSize * 5/16);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/4, windowSize * 1/3, windowSize * 1/8);
+            g.drawString("Endless Mode", windowSize * 3/8, windowSize * 9/16);
             g.setColor(Color.RED);
-            g.drawRect(windowSize * 3/8 - 20, windowSize * 3/4, windowSize * 1/3, windowSize * 1/8);
+            g.drawRect(windowSize * 3/8 - 20, windowSize * 1/2, windowSize * 1/3, windowSize * 1/8);
       
                         
             
@@ -883,7 +883,10 @@ public class DrawGame extends JPanel {
                   player.x = 100;
                   player.y = 100;
                } else if (endlessModeActive) {
-                  enemies.clear();
+                  //Reduce enemies to 1
+                  while (enemies.size() > 1) {
+                     enemies.remove(enemies.get(enemies.size()-1));
+                  }
                   player.x = 500;
                   player.y = 500;
                } else {
@@ -1048,8 +1051,8 @@ public class DrawGame extends JPanel {
                   BufferedImage missileSprite1rotate2 = op2.filter(missileSprite1, null);
                   BufferedImage missileSprite2rotate2 = op2.filter(missileSprite2, null);
                   BufferedImage missileSprite3rotate2 = op2.filter(missileSprite3, null);
-                  double missileDX2 = missileSpeed * Math.cos(angle + Math.PI / 6);
-                  double missileDY2 = missileSpeed * Math.sin(angle + Math.PI / 6);
+                  double missileDX2 = missileSpeed * difficulty * Math.cos(angle + Math.PI / 6);
+                  double missileDY2 = missileSpeed * difficulty * Math.sin(angle + Math.PI / 6);
                   Missile toShoot2 = new Missile(missileX + missileDX2, missileY + missileDY2, missileDX2, missileDY2, true, missileSprite1rotate2, missileSprite2rotate2, missileSprite3rotate2);
                   toShoot2.bouncesLeft = 1;
                   missiles.add(toShoot2);
@@ -1058,8 +1061,8 @@ public class DrawGame extends JPanel {
                   BufferedImage missileSprite1rotate3 = op3.filter(missileSprite1, null);
                   BufferedImage missileSprite2rotate3 = op3.filter(missileSprite2, null);
                   BufferedImage missileSprite3rotate3 = op3.filter(missileSprite3, null);
-                  double missileDX3 = missileSpeed * Math.cos(angle - Math.PI / 6);
-                  double missileDY3 = missileSpeed * Math.sin(angle - Math.PI / 6);
+                  double missileDX3 = missileSpeed * difficulty * Math.cos(angle - Math.PI / 6);
+                  double missileDY3 = missileSpeed * difficulty * Math.sin(angle - Math.PI / 6);
                   Missile toShoot3 = new Missile(missileX + missileDX3, missileY + missileDY3, missileDX3, missileDY3, true, missileSprite1rotate3, missileSprite2rotate3, missileSprite3rotate3);
                   toShoot3.bouncesLeft = 1;
                   missiles.add(toShoot3);
@@ -1098,7 +1101,8 @@ public class DrawGame extends JPanel {
                enemy.y += missileDY / 4;
             }
          } 
-      } else if (enemy.pathfinding_ai) {
+      } 
+      if (enemy.pathfinding_ai) {
          //Establish angle to player and missile trajectory
          double missileDX, missileDY;
          int targetX = player.x, targetY = player.y;
@@ -1125,7 +1129,7 @@ public class DrawGame extends JPanel {
          double tileSize = windowSize / layout.length;
          int[] directionChecks = new int[4];
          boolean moved = false;
-         if ((enemy.x < 0 || enemy.x > 1000 || enemy.y < 0 || enemy.y > 1000) || 
+         if ((enemy.x < 0 || enemy.x > windowSize || enemy.y < 0 || enemy.y > windowSize) || 
          (layout[(int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length))] == 0 ||
          layout[(int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length))] == 2)) {
             enemy.x += missileDX / difficulty;
@@ -1399,6 +1403,18 @@ public class DrawGame extends JPanel {
          spawnX = randSpawnX;
       }
       Tank enemy = new Tank(true, spawnX, spawnY);
+      int aiSelect = rand.nextInt(3);
+      switch (aiSelect) {
+         case 0:
+         enemy.homing_ai = true;
+            break;
+         case 1:
+         enemy.tripleshot_ai = true;
+            break;
+         default:
+            enemy.rocket_ai = true;
+            
+      }
       enemy.pathfinding_ai = true;
       enemies.add(enemy);
    }
@@ -1717,9 +1733,9 @@ public class DrawGame extends JPanel {
                mainMenu3 = mainMenu3Normal;
             }
          } else if (modeSelectActive) {
-            if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize / 2 + 30 && e.getY() < windowSize * 5/8 + 30) {
+            if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize / 4 + 30 && e.getY() < windowSize * 3/8 + 30) {
                levelModeHovered = 1;
-            } else if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize * 3/4 + 30 && e.getY() < windowSize * 7/8 + 30) {
+            } else if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize * 1/2 + 30 && e.getY() < windowSize * 5/8 + 30) {
                levelModeHovered = 2;
             } else {
                levelModeHovered = 0;
@@ -1789,11 +1805,13 @@ public class DrawGame extends JPanel {
             frameCount = 0;
          }
          if (modeSelectActive) {
-            if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize / 2 + 30 && e.getY() < windowSize * 5/8 + 30) {
+            if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize / 4 + 30 && e.getY() < windowSize * 3/8 + 30) {
                levelSelectActive = true;
                modeSelectActive = false;
-            } else if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize * 3/4 + 30&& e.getY() < windowSize * 7/8 + 30) {
+            } else if (e.getX() > windowSize * 3/8 - 20 && e.getX() < windowSize * 17/24 - 20 && e.getY() > windowSize * 1/2 + 30&& e.getY() < windowSize * 5/8 + 30) {
                endlessModeActive = true;
+               levelSummaryScreen = false;
+               levelSelectActive = false;
                gamePlayActive = true;
                modeSelectActive = false;
                frameCount = 0;
@@ -2079,7 +2097,8 @@ public class DrawGame extends JPanel {
          if (e.getKeyCode() == KeyEvent.VK_R) {
             gameOverScreen = false;
             gamePlayActive = false;
-            levelSelectActive = true;
+            modeSelectActive = true;
+            endlessModeActive = false;
             enemies.clear();
             missiles.clear();
          }
