@@ -69,17 +69,46 @@ public class PathFind {
       }
    }
    
-   public static ArrayList<Node> chooseShortestWalkablePath(ArrayList<ArrayList<Node>> pathList) {
-      return null;
+   public static ArrayList<Node> chooseShortestWalkablePath(ArrayList<ArrayList<Node>> pathList, Tank enemy, int[][] layout, int tileSize) {
+      ArrayList<Node> shortestPath = new ArrayList<>();
+      double shortestPathLength = -1;
+      for (ArrayList<Node> path: pathList) {
+         //Only calculate path lengths for those that are walkable by the enemy
+         if (path.get(path.size() - 1).canWalk(enemy.getX(), enemy.getY(), layout, tileSize)) {
+            double pathLength = 0;
+            for (int i = 0; i < path.size() - 1; i++) {
+               Node firstPoint = path.get(i);
+               Node secondPoint = path.get(i + 1);
+               pathLength += Math.sqrt((firstPoint.getX() - secondPoint.getX()) * (firstPoint.getX() - secondPoint.getX())
+                               + (firstPoint.getY() - secondPoint.getY()) * (firstPoint.getY() - secondPoint.getY()));
+            }
+            if (pathLength < shortestPathLength) {
+               shortestPath = path;
+               shortestPathLength = pathLength;
+            }
+         }
+      }
+      return shortestPath;
    }
    
-   public static ArrayList<ArrayList<Node>> generatePaths(ArrayList<Node> nodeGraph) {
+   public static ArrayList<ArrayList<Node>> generatePaths(ArrayList<Node> nodeGraph, Tank player, Tank enemy, int[][] layout, int tileSize) {
       //Find all exchange points that can walk to the player
+      ArrayList<Node> startPoints = new ArrayList<>();
+      for (Node point: nodeGraph) {
+         if (point.canWalk(player.getX(), player.getY(), layout, tileSize)) {
+            startPoints.add(point);
+         }
+      }
       
-      
+      ArrayList<ArrayList<Node>> paths = new ArrayList<ArrayList<Node>>();
       //From each of these, generate the paths to every other reachable exchange point 
       //and put all of these paths into an ArrayList
-      return null;
+      for (Node startPoint: startPoints) {
+         for (ArrayList<Node> path: extendPaths(enemy, nodeGraph, startPoint, layout, tileSize)) {
+            paths.add(path);
+         }
+      }
+      return paths;
    } 
    
    public static ArrayList<ArrayList<Node>> extendPaths(Tank enemy, ArrayList<Node> nodeGraph, Node startPoint, int[][] layout, int tileSize) {

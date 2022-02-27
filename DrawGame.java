@@ -2105,6 +2105,7 @@ public class DrawGame extends JPanel {
             gamePlayActive = false;
             modeSelectActive = true;
             endlessModeActive = false;
+            drawExplosion = false;
             enemies.clear();
             missiles.clear();
          }
