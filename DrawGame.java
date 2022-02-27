@@ -59,6 +59,7 @@ public class DrawGame extends JPanel {
    private boolean nextLevelHovered = false;
    private boolean levelSelectHovered = false;
    private int missileSpeed = 5;
+   private ArrayList<Node> nodeGraph = new ArrayList<Node>();
    
    private Tank player;
    private int playerLives = 3;
@@ -216,6 +217,8 @@ public class DrawGame extends JPanel {
       levelLayouts.add(GameConstants.level10Layout);
       accuracyStars = new int[levelLayouts.size()];
       timerStars = new int[levelLayouts.size()];
+      nodeGraph = PathFind.generateExchangePoints(GameConstants.level1Layout, windowSize / GameConstants.level1Layout.length);
+      PathFind.addNodeConnections(nodeGraph, GameConstants.level1Layout, windowSize / GameConstants.level1Layout.length);
    }
    
    public void drawMainMenu(int frameCount, Graphics g) {
@@ -683,6 +686,8 @@ public class DrawGame extends JPanel {
          }
 
       } else {
+         Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 15);
+         g.setFont(tankFont);
          g.drawString("Enemy Tanks Killed: " + enemyCount, windowSize * 1/4, windowSize * 3 / 8);
          g.drawString("Time Elapsed: " + String.format("%02d", (levelTimeEnd - levelTimeStart) / 1000 / 60)
              + ":" + String.format("%02d", (levelTimeEnd - levelTimeStart) / 1000 % 60), windowSize * 1/4, windowSize * 7/ 16);
@@ -1548,7 +1553,7 @@ public class DrawGame extends JPanel {
                   frame.setSize(515, 530); 
                   playerLives = 3;
                   player.x = 100;
-                  player.y = 250;
+                  player.y = 100;
                   enemies.clear();
                   for (Tank enemy: GameConstants.getLevel5Enemies()) {
                      enemies.add(enemy);
@@ -1560,8 +1565,8 @@ public class DrawGame extends JPanel {
                   enemyCount = enemies.size();
                } else if (level == 5) {
                   layout = GameConstants.level6Layout;
-                  windowSize = 500;
-                  frame.setSize(515, 530); 
+                  windowSize = 1000;
+                  frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight()); 
                   playerLives = 3;
                   player.x = 100;
                   player.y = 250;
@@ -1702,6 +1707,7 @@ public class DrawGame extends JPanel {
             checkCollisions();
             
             drawTankExplosions(g);
+            g.drawImage(redAccuracySymbol, lastMouseX - 20, lastMouseY - 20, 40, 40, null);
             
          } else if (gameOverScreen) {
             drawGameOver(g);
@@ -1787,8 +1793,8 @@ public class DrawGame extends JPanel {
             }
          }
          
-         lastMouseX = e.getX();
-         lastMouseY = e.getY();
+         lastMouseX = e.getX() - 5;
+         lastMouseY = e.getY() - 30;
       }
       
    }
