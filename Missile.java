@@ -102,8 +102,8 @@ public class Missile {
                }
             }
             double rotationRequired = angle + (3 * (Math.PI / 180) * rotationDirection);
-            dx = missileSpeed / 2 * Math.cos(rotationRequired);
-            dy = missileSpeed / 2 * Math.sin(rotationRequired);
+            dx = missileSpeed * Math.cos(rotationRequired);
+            dy = missileSpeed * Math.sin(rotationRequired);
             double locationX = sprite1Orig.getWidth() / 2;
             double locationY = sprite1Orig.getHeight() / 2;
             try {

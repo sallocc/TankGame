@@ -290,11 +290,11 @@ public class DrawGame extends JPanel {
    
    public void drawModeSelect(Graphics g) throws FontFormatException, IOException {
       g.setColor(Color.BLACK);
-      Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 32);
+      Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 32 * windowSize / 500);
       g.setFont(tankFont);
       g.drawString("Mode Select", windowSize * 1/4, windowSize * 3/16);
       
-      tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 16);
+      tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 16 * windowSize / 500);
       g.setFont(tankFont);
       
       switch (levelModeHovered) {
@@ -783,7 +783,7 @@ public class DrawGame extends JPanel {
       
       //Check for missile collisions with walls
       for (Missile missile: missiles) {
-         if (missile.getX() < 0 || missile.getX() > 1000 || missile.getY() < 0 || missile.getY() > 1000) {
+         if (missile.getX() < 0 || missile.getX() >= 1000 || missile.getY() < 0 || missile.getY() >= 1000) {
             toRemove.add(missile);
             continue;
          }
@@ -888,10 +888,7 @@ public class DrawGame extends JPanel {
                   player.x = 100;
                   player.y = 100;
                } else if (endlessModeActive) {
-                  //Reduce enemies to 1
-                  while (enemies.size() > 1) {
-                     enemies.remove(enemies.get(enemies.size()-1));
-                  }
+                  enemies.clear();
                   player.x = 500;
                   player.y = 500;
                } else {
@@ -1075,7 +1072,7 @@ public class DrawGame extends JPanel {
                      enemy.playExplosion();
                   }
                } else if (enemy.homing_ai) {
-                  Missile toShoot = new Missile(missileX, missileY, missileDX / 2, missileDY / 2, true, missileSprite1rotate, missileSprite2rotate, missileSprite3rotate);
+                  Missile toShoot = new Missile(missileX, missileY, missileDX, missileDY, true, missileSprite1rotate, missileSprite2rotate, missileSprite3rotate);
                   toShoot.bouncesLeft = 0;
                   toShoot.homing = true;
                   missiles.add(toShoot);
@@ -1133,123 +1130,27 @@ public class DrawGame extends JPanel {
          //Check if you can go straight to player
          double tileSize = windowSize / layout.length;
          int[] directionChecks = new int[4];
-         boolean moved = false;
-         if ((enemy.x < 0 || enemy.x > windowSize || enemy.y < 0 || enemy.y > windowSize) || 
-         (layout[(int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length))] == 0 ||
-         layout[(int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length))][(int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length))] == 2)) {
-            enemy.x += missileDX / difficulty;
-            enemy.y += missileDY / difficulty;
-            moved = true;
+         if (enemy.x < 0 || enemy.x >= windowSize || enemy.y < 0 || enemy.y >= windowSize || enemy.canSee(player, layout, windowSize / layout[0].length)) {
+            enemy.x += missileDX / 4;
+            enemy.y += missileDY / 4;
          } else {
-            int pathDX = 0, pathDY = 0;
-            int pathTargetX = (int) (player.x / tileSize), pathTargetY = (int) (player.y / tileSize);
-            int sourceX = (int) ((enemy.x + missileDX / difficulty * 7) / (windowSize / layout.length));
-            int sourceY = (int) ((enemy.y + missileDY / difficulty * 7) / (windowSize / layout.length));
-            //Correct for out of bounds
-            if (sourceX < 0) {
-               sourceX = 0;
-            } 
-            if (sourceX >= layout.length) {
-               sourceX = layout.length - 1;
-            }
-            if (sourceY < 0) {
-               sourceY = 0;
-            }
-            if (sourceY >= layout.length) {
-               sourceY = layout.length - 1;
-            }
-            int enemyTileX = (int) ((enemy.x) / (windowSize / layout.length)), 
-               enemyTileY = (int) ((enemy.y) / (windowSize / layout.length));
-            int wallCenterX = (int) ((2 * sourceX + 1) * tileSize / 2);
-            int wallCenterY = (int) ((2 * sourceY + 1) * tileSize / 2);
-            if (Math.abs(shooterX - wallCenterX) > 35 && Math.abs(missileDX) > Math.abs(missileDY)) {
-               pathDY = (int) Math.signum(missileDY);
-            } else {
-               pathDX = (int) Math.signum(missileDX);
-            }
-            directionChecks = pathFind(pathTargetX, pathTargetY, sourceX, sourceY, pathDX, pathDY);
-         }
-         for (int i = 0; i < 4; i++) {
-            if (!moved) {
-               switch (directionChecks[i]) {
-                  case 1:
-                     //Go up
-                     if (enemy.y > 1000 || ((layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y - 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 2))) {
-                        enemySprite1rotate = enemySpritesRotated1[270];
-                        enemySprite2rotate = enemySpritesRotated2[270];
-                        enemySprite3rotate = enemySpritesRotated3[270];
-                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
-                        enemy.y -= missileSpeed;
-                        moved = true;
-                     }
-                     break;
-                  case 2:
-                     //Go down
-                     if (enemy.y < 0 || ((layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x + 15) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y + 25) / tileSize)][(int) ((enemy.x - 15) / tileSize)] == 2))) {
-                        enemySprite1rotate = enemySpritesRotated1[90];
-                        enemySprite2rotate = enemySpritesRotated2[90];
-                        enemySprite3rotate = enemySpritesRotated3[90];
-                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
-                        enemy.y += missileSpeed;
-                        moved = true;
-                     }
-                     break;
-                  case 3:
-                     //Go right
-                     if (enemy.x < 0 || ((layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x + 25) / tileSize)] == 2))) {
-                        enemySprite1rotate = enemySpritesRotated1[0];
-                        enemySprite2rotate = enemySpritesRotated2[0];
-                        enemySprite3rotate = enemySpritesRotated3[0];
-                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
-                        enemy.x += missileSpeed;
-                        moved = true;
-                     }
-                     break;
-                  case 4:
-                     //Go left
-                     if (enemy.x > 1000 || ((layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y - 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2)) && 
-                     ((layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y + 15) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2))) {
-                        enemySprite1rotate = enemySpritesRotated1[180];
-                        enemySprite2rotate = enemySpritesRotated2[180];
-                        enemySprite3rotate = enemySpritesRotated3[180];
-                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
-                        enemy.x -= missileSpeed;
-                        moved = true;
-                     }
-                     break;
-                  default:
-                     //Go left
-                     if (enemy.x > 1000 || (layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 0 ||
-                     layout[(int) ((enemy.y) / tileSize)][(int) ((enemy.x - 25) / tileSize)] == 2)) {
-                        enemySprite1rotate = enemySpritesRotated1[180];
-                        enemySprite2rotate = enemySpritesRotated2[180];
-                        enemySprite3rotate = enemySpritesRotated3[180];
-                        enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
-                        enemy.x -= missileSpeed;
-                        moved = true;
-                     }
-               }     
-            }
-         }
+            Node pathNode = PathFind.getPathFoundNode(enemy, player, layout, windowSize / layout.length);
+            double dx = pathNode.getX() - enemy.x;
+            double dy = pathNode.getY() - enemy.y;
+            double pathAngle = Math.atan(dy / dx);
+            double nodeDistance = Math.sqrt(dx * dx + dy * dy);
+            dx = dx / nodeDistance;
+            dy = dy / nodeDistance;
+            enemy.x += missileSpeed * difficulty * dx / 4;
+            enemy.y += missileSpeed * difficulty * dy / 4;
+            rotationRequired = (int) Math.toDegrees(pathAngle + 4*Math.PI);
+            degreeIndex =  rotationRequired % 360;
+            if (degreeIndex == -1) { degreeIndex = 270; }
+            enemySprite1rotate = enemySpritesRotated1[degreeIndex];
+            enemySprite2rotate = enemySpritesRotated2[degreeIndex];
+            enemySprite3rotate = enemySpritesRotated3[degreeIndex];
+            enemy.setTankImages(enemySprite1rotate, enemySprite2rotate, enemySprite3rotate);
+          }
       }
    }
    
@@ -1428,8 +1329,8 @@ public class DrawGame extends JPanel {
    protected void paintComponent(Graphics g) {
       super.paintComponent(g);
       
-      //Check if all enemies are dead naturally
-      if (enemies.isEmpty() && !modeSelectActive && !drawExplosion && !gameOverScreen && !levelSelectActive && !levelSummaryScreen) {
+       //Check if all enemies are dead naturally in a regular level
+      if (enemies.isEmpty() && !modeSelectActive && !drawExplosion && !gameOverScreen && !levelSelectActive && !levelSummaryScreen && !endlessModeActive) {
          frameCount = 0;
          levelTimeEnd = System.currentTimeMillis();
          drawExplosion = true;
@@ -1665,6 +1566,7 @@ public class DrawGame extends JPanel {
          } else if (optionsMenuActive) {
             drawOptionsMenu(g);        
          } else if (gamePlayActive) {
+            //Test path-finding on first enemy
             updatePlayer();
             if (endlessModeActive && 5 - 4/5.0 * Math.min((System.currentTimeMillis() - levelTimeStart) / 1000 / 60, 5.0) < 
                                     (System.currentTimeMillis() - lastEnemySpawnTime) / 1000) {
@@ -2150,7 +2052,7 @@ public class DrawGame extends JPanel {
                left_pressed = true;
             }
             //If you press space and it's been a second since you last fired...
-            if (e.getKeyCode() == KeyEvent.VK_SPACE && System.currentTimeMillis() - player.lastFiredTime > 1000) {
+            if (e.getKeyCode() == KeyEvent.VK_SPACE && System.currentTimeMillis() - player.lastFiredTime > 500) {
                player.lastFiredTime = System.currentTimeMillis();
                int mouseX = lastMouseX, mouseY = lastMouseY;
                int playerX = player.x, playerY = player.y;

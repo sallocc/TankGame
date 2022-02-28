@@ -45,10 +45,10 @@ public class PathFind {
             //If there is only 1 block in the square there is an exchange point
             if (blocks == 1 ) {
                if (pointPlaceLog[pointRow][pointCol] == 0) {
-                  if (blockIdx == 0) nodeList.add(new Node((col + 1.5) * tileSize, (row + 1.5) * tileSize));
-                  if (blockIdx == 1) nodeList.add(new Node((col + 0.5) * tileSize, (row + 1.5) * tileSize));
-                  if (blockIdx == 2) nodeList.add(new Node((col + 1.5) * tileSize, (row + 0.5) * tileSize));
-                  if (blockIdx == 3) nodeList.add(new Node((col + 0.5) * tileSize, (row + 0.5) * tileSize));
+                  if (blockIdx == 0) nodeList.add(new Node((col + 1.8) * tileSize, (row + 1.8) * tileSize));
+                  if (blockIdx == 1) nodeList.add(new Node((col + 0.8) * tileSize, (row + 1.8) * tileSize));
+                  if (blockIdx == 2) nodeList.add(new Node((col + 1.8) * tileSize, (row + 0.8) * tileSize));
+                  if (blockIdx == 3) nodeList.add(new Node((col + 0.8) * tileSize, (row + 0.8) * tileSize));
                   pointPlaceLog[pointRow][pointCol] = 1;
                }
             }
@@ -61,8 +61,8 @@ public class PathFind {
    public static void addNodeConnections(ArrayList<Node> nodeList, int[][] layout, int tileSize) {
       for (Node exchangePoint: nodeList) {
          for (Node otherPoint: nodeList) {
-            if (exchangePoint.canWalk(otherPoint.getX(), otherPoint.getY(), layout, tileSize) && exchangePoint.getX() != otherPoint.getX()
-               && exchangePoint.getY() != otherPoint.getY()) {
+            if (exchangePoint.canWalk(otherPoint.getX(), otherPoint.getY(), layout, tileSize) && (exchangePoint.getX() != otherPoint.getX()
+               || exchangePoint.getY() != otherPoint.getY())) {
                   exchangePoint.addConnection(otherPoint);
             }
          }  
@@ -71,7 +71,7 @@ public class PathFind {
    
    public static ArrayList<Node> chooseShortestWalkablePath(ArrayList<ArrayList<Node>> pathList, Tank enemy, int[][] layout, int tileSize) {
       ArrayList<Node> shortestPath = new ArrayList<>();
-      double shortestPathLength = -1;
+      double shortestPathLength = 1000000;
       for (ArrayList<Node> path: pathList) {
          //Only calculate path lengths for those that are walkable by the enemy
          if (path.get(path.size() - 1).canWalk(enemy.getX(), enemy.getY(), layout, tileSize)) {
@@ -113,6 +113,7 @@ public class PathFind {
    
    public static ArrayList<ArrayList<Node>> extendPaths(Tank enemy, ArrayList<Node> nodeGraph, Node startPoint, int[][] layout, int tileSize) {
       ArrayList<Node> visited = new ArrayList<>();
+      visited.add(startPoint);
       ArrayList<ArrayList<Node>> paths = new ArrayList<ArrayList<Node>>();
       ArrayList<Node> firstPath = new ArrayList<>();
       firstPath.add(startPoint);
@@ -139,8 +140,8 @@ public class PathFind {
                      firstConnection = false;
                   } else {
                      ArrayList<Node> newPath = new ArrayList<>();
-                     for (Node point: path) {
-                        newPath.add(point);
+                     for (int i = 0; i < path.size() - 1; i++) {
+                        newPath.add(path.get(i));
                      }
                      newPath.add(connection);
                      pathsToAdd.add(newPath);
@@ -148,13 +149,25 @@ public class PathFind {
                   visited.add(connection);
                }  
             }
-            for (ArrayList<Node> newPath: pathsToAdd) {
-               paths.add(newPath);
-            }
-            pathsToAdd.clear();
          }
+         for (ArrayList<Node> newPath: pathsToAdd) {
+            paths.add(newPath);
+         }
+         pathsToAdd.clear();
          
       }
       return paths;
+   }
+   
+   public static Node getPathFoundNode(Tank enemy, Tank player, int[][] layout, int tileSize) {
+      ArrayList<Node> nodeList = generateExchangePoints(layout, tileSize);
+      addNodeConnections(nodeList, layout, tileSize);
+      ArrayList<ArrayList<Node>> paths = generatePaths(nodeList, player, enemy, layout, tileSize);
+      ArrayList<Node> shortestPath = chooseShortestWalkablePath(paths, enemy, layout, tileSize);
+      if (!shortestPath.isEmpty()) {
+         return shortestPath.get(shortestPath.size() - 1);
+      } else {
+         return new Node(enemy.getX(), enemy.getY());
+      }
    }
 }
