@@ -45,10 +45,10 @@ public class PathFind {
             //If there is only 1 block in the square there is an exchange point
             if (blocks == 1 ) {
                if (pointPlaceLog[pointRow][pointCol] == 0) {
-                  if (blockIdx == 0) nodeList.add(new Node((col + 1.8) * tileSize, (row + 1.8) * tileSize));
-                  if (blockIdx == 1) nodeList.add(new Node((col + 0.8) * tileSize, (row + 1.8) * tileSize));
-                  if (blockIdx == 2) nodeList.add(new Node((col + 1.8) * tileSize, (row + 0.8) * tileSize));
-                  if (blockIdx == 3) nodeList.add(new Node((col + 0.8) * tileSize, (row + 0.8) * tileSize));
+                  if (blockIdx == 0) nodeList.add(new Node((col + 1.5) * tileSize, (row + 1.5) * tileSize));
+                  if (blockIdx == 1) nodeList.add(new Node((col + 0.5) * tileSize, (row + 1.5) * tileSize));
+                  if (blockIdx == 2) nodeList.add(new Node((col + 1.5) * tileSize, (row + 0.5) * tileSize));
+                  if (blockIdx == 3) nodeList.add(new Node((col + 0.5) * tileSize, (row + 0.5) * tileSize));
                   pointPlaceLog[pointRow][pointCol] = 1;
                }
             }
