@@ -56,6 +56,7 @@ public class DrawGame extends JPanel {
    private BufferedImage levelSelect;
    private BufferedImage levelSummary, levelSummaryNextLevel, levelSummaryLevelSelect;
    private BufferedImage mudTile, holeTile;
+   private BufferedImage settingsIcon;
    private boolean nextLevelHovered = false;
    private boolean levelSelectHovered = false;
    private int missileSpeed = 5;
@@ -224,6 +225,7 @@ public class DrawGame extends JPanel {
    public void drawMainMenu(int frameCount, Graphics g) {
       try {
          if (mainMenu1 == null) {
+            settingsIcon = ImageIO.read(new File("settingsIcon.png"));
             mudTile = ImageIO.read(new File("mud.png"));
             holeTile = ImageIO.read(new File("hole.png"));
             levelSummary = ImageIO.read(new File("levelSummary.png"));
@@ -481,16 +483,6 @@ public class DrawGame extends JPanel {
             g.drawImage(player.getBarrelImage1(), 60 + i * 30, 15, player.getSize() / 2, player.getSize() / 2, null);
          }
          
-         //Draw control instructions
-         g.setColor(Color.BLACK);
-         Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 12);
-         g.setFont(tankFont);
-         g.drawString("Controls", 75, 250);
-         g.drawString("Movement -> WASD", 75, 270);
-         g.drawString("Shoot -> Space", 75, 290);
-         g.drawString("Pause -> P or ESC", 75, 310);
-         g.drawString("Return to Level Select -> R", 75, 330);
-         
          long minutes = (System.currentTimeMillis() - levelTimeStart) / 1000 / 60;
          long seconds = (System.currentTimeMillis() - levelTimeStart) / 1000 % 60;
          g.setColor(Color.WHITE);
@@ -623,6 +615,11 @@ public class DrawGame extends JPanel {
       }
    }
    
+   private void drawSettingsIcon(Graphics g) {
+      g.drawImage(settingsIcon, windowSize - 40/(windowSize / 500), 40/(windowSize / 500) - 10, 20/(windowSize / 500), 20/(windowSize / 500), null);
+      
+   }
+   
    private void drawOptionsMenu(Graphics g) {
       if (soundOn) {
          if (musicOn) {
@@ -660,6 +657,21 @@ public class DrawGame extends JPanel {
                g.drawImage(optionsSoundOffMusicOffHard, 0, 0, windowSize, windowSize, null);
             }
          }
+      }
+      //Draw control instructions
+      try {
+         g.setColor(Color.BLACK);
+         Font tankFont = Font.createFont(Font.TRUETYPE_FONT, new File("zagreb_underground.ttf")).deriveFont(Font.PLAIN, 12);
+         g.setFont(tankFont);
+         int controlsHeight = windowSize - 120;
+         g.drawRect(65, controlsHeight - 20, 225, 110);
+         g.drawString("Controls", 75, controlsHeight);
+         g.drawString("Movement -> WASD", 75, controlsHeight + 20);
+         g.drawString("Shoot -> Space", 75, controlsHeight + 40);
+         g.drawString("Pause -> P or ESC", 75, controlsHeight + 60);
+         g.drawString("Return to Level Select -> R", 75, controlsHeight + 80);
+      } catch (FontFormatException e) {
+      } catch (IOException e) { 
       }
    }
    
@@ -1358,7 +1370,7 @@ public class DrawGame extends JPanel {
             printer.print(starString);
             printer.close();
          } catch (FileNotFoundException e) {
-            System.err.println("Could not save star data.");
+            System.out.println("Could not save star data.");
          }
       }
       
@@ -1417,6 +1429,7 @@ public class DrawGame extends JPanel {
                   frameCount = 0;
                   frameRepeat = 3;
                   drawLevel3 = true;
+                  level = 3;
                   layout = GameConstants.level3Layout;
                   windowSize = 500;
                   frame.setSize(515, 530); 
@@ -1436,6 +1449,7 @@ public class DrawGame extends JPanel {
                   layout = GameConstants.level4Layout;
                   windowSize = 500;
                   frame.setSize(515, 530); 
+                  level = 4;
                   playerLives = 3;
                   player.x = 100;
                   player.y = 100;
@@ -1453,6 +1467,7 @@ public class DrawGame extends JPanel {
                   windowSize = 500;
                   frame.setSize(515, 530); 
                   playerLives = 3;
+                  level = 5;
                   player.x = 100;
                   player.y = 100;
                   enemies.clear();
@@ -1469,6 +1484,7 @@ public class DrawGame extends JPanel {
                   windowSize = 1000;
                   frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight()); 
                   playerLives = 3;
+                  level = 6;
                   player.x = 100;
                   player.y = 250;
                   enemies.clear();
@@ -1485,6 +1501,7 @@ public class DrawGame extends JPanel {
                   windowSize = 1000;
                   frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
                   playerLives = 3;
+                  level = 7;
                   player.x = 100;
                   player.y = 250;
                   enemies.clear();
@@ -1502,6 +1519,7 @@ public class DrawGame extends JPanel {
                   frame.setSize(1015, (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight());
                   playerLives = 3;
                   player.x = 100;
+                  level = 8;
                   player.y = 250;
                   enemies.clear();
                   for (Tank enemy: GameConstants.getLevel8Enemies()) {
@@ -1519,6 +1537,7 @@ public class DrawGame extends JPanel {
                   playerLives = 3;
                   player.x = 100;
                   player.y = 250;
+                  level = 9;
                   enemies.clear();
                   for (Tank enemy: GameConstants.getLevel9Enemies()) {
                      enemies.add(enemy);
@@ -1535,6 +1554,7 @@ public class DrawGame extends JPanel {
                   playerLives = 3;
                   player.x = 100;
                   player.y = 250;
+                  level = 10;
                   enemies.clear();
                   for (Tank enemy: GameConstants.getLevel10Enemies()) {
                      enemies.add(enemy);
@@ -1550,8 +1570,11 @@ public class DrawGame extends JPanel {
                }
                timer.setDelay(tickLength);
             }
+         } else if (optionsMenuActive) {
+            drawOptionsMenu(g);        
          } else if (modeSelectActive) {
             drawModeSelect(g);
+            drawSettingsIcon(g);
          } else if (levelSummaryScreen) {
             drawLevelSummary(g);
          } else if (mainMenuActive) {
@@ -1563,8 +1586,7 @@ public class DrawGame extends JPanel {
             
          } else if (levelSelectActive) {
             drawLevelSelect(g);
-         } else if (optionsMenuActive) {
-            drawOptionsMenu(g);        
+            drawSettingsIcon(g);
          } else if (gamePlayActive) {
             //Test path-finding on first enemy
             updatePlayer();
@@ -1610,6 +1632,7 @@ public class DrawGame extends JPanel {
             
             drawTankExplosions(g);
             g.drawImage(redAccuracySymbol, lastMouseX - 20, lastMouseY - 20, 40, 40, null);
+            drawSettingsIcon(g);
             
          } else if (gameOverScreen) {
             drawGameOver(g);
@@ -1705,6 +1728,13 @@ public class DrawGame extends JPanel {
    
       @Override
       public void mouseClicked(MouseEvent e) {
+         if (e.getX() < windowSize - 20 / (windowSize / 500) + 10 && e.getX() > windowSize - 40/(windowSize / 500) + 10 
+            && e.getY() < 40 / (windowSize / 500) + 40 && e.getY() > 20/(windowSize / 500) + 40) {            
+            System.out.println("Options pressed.");
+            optionsMenuActive = true;
+            gamePlayActive = false;
+         }
+         
          //System.out.println("X: " + e.getX() + ",  Y: " + e.getY());
          if (e.getX() > 355 && e.getX() < 465 && e.getY() > 250 && e.getY() < 325 && mainMenuActive) {
             fadeToWhite = true;
